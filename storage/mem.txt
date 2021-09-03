@@ -1,0 +1,5 @@
+Green Tea#2304200
+Hot Chocolate#1503500
+Espresso#1502800
+Double Espresso#903200
+Strawberry Cake#254500

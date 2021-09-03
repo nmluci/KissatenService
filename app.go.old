@@ -1,0 +1,93 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/mux"
+)
+
+type Article struct {
+	Id      string `json:"Id"`
+	Title   string `json:"Title"`
+	Desc    string `json:"desc"`
+	Content string `json:"content"`
+}
+
+var Articles []Article
+
+func homePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Welcum to the Homepage!")
+	fmt.Println("Endpoint Hit: homePage")
+}
+
+func handleRequest() {
+	myRouter := mux.NewRouter().StrictSlash(true)
+
+	myRouter.HandleFunc("/", homePage)
+	myRouter.HandleFunc("/articles", returnAllArticles)
+	myRouter.HandleFunc("/article", createNewArticle).Methods("POST")
+	myRouter.HandleFunc("/article/{id}", deleteArticle).Methods("DELETE")
+	myRouter.HandleFunc("/article/{id}", updateArticle).Methods("PUT")
+	myRouter.HandleFunc("/articles/{id}", returnSingleArticle)
+	log.Fatal(http.ListenAndServe(":8081", myRouter))
+}
+
+func createNewArticle(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	var article Article
+	json.Unmarshal(reqBody, &article)
+	Articles = append(Articles, article)
+	json.NewEncoder(w).Encode(article)
+}
+
+func returnSingleArticle(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["id"]
+
+	for _, article := range Articles {
+		if article.Id == key {
+			json.NewEncoder(w).Encode(article)
+		}
+	}
+}
+
+func updateArticle(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	for idx, art := range Articles {
+		if art.Id == id {
+			json.Unmarshal(reqBody, &Articles[idx])
+		}
+	}
+}
+
+func deleteArticle(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	for idx, art := range Articles {
+		if art.Id == id {
+			Articles = append(Articles[:idx], Articles[idx+1:]...)
+		}
+	}
+}
+
+func returnAllArticles(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: returnAllArticles")
+	json.NewEncoder(w).Encode(Articles)
+}
+
+func main() {
+	Articles = []Article{
+		{Id: "1", Title: "Hello", Desc: "Article Description", Content: "Article Content"},
+		{Id: "2", Title: "Hello 2", Desc: "Article Description 2", Content: "Article Content 2"},
+	}
+	handleRequest()
+}

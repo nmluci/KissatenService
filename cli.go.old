@@ -1,0 +1,89 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+
+	cashier "github.com/nmluci/KissatenService/pkg/Cashier"
+	mem "github.com/nmluci/KissatenService/pkg/Membership"
+)
+
+func cli() {
+	cashier.Init()
+
+	carts := &cashier.UserList{}
+	memberId := &mem.Member{
+		ID:    177013,
+		Name:  "Lynne Fuyuna",
+		Point: 99999999,
+	}
+
+	for opt := 0; opt != -1; {
+		fmt.Println("Welcome to SchneeKatze's Cafe!")
+		fmt.Println("[1] Make an Order")
+		fmt.Println("[2] Cancel an Order")
+		fmt.Println("[3] Check Shopping Cart")
+		fmt.Println("[4] Membership Management")
+		fmt.Println("[5] Checkout")
+		fmt.Println("[6] Exit")
+		fmt.Println("Enter your choices")
+		fmt.Scanf("%d\n", &opt)
+
+		switch opt {
+		case 1:
+			var (
+				name string
+				sum  int
+			)
+			cashier.ItemStorage.Verbose()
+			getString("Enter product's name: ", &name)
+			fmt.Print("Sum: ")
+			fmt.Scanf("%d\n", &sum)
+			carts.Buy(memberId, name, sum)
+		case 2:
+			var (
+				name string
+				sum  int
+			)
+			carts.GetCart(memberId).Verbose()
+			getString("Enter product's name: ", &name)
+			fmt.Printf("Sum: ")
+			fmt.Scanf("%d\n", &sum)
+			if err := carts.RemoveItem(memberId, name, sum); err != nil {
+				log.Fatal(err)
+			}
+		case 3:
+			carts.Verbose()
+		case 4:
+
+		case 5:
+			var (
+				name string
+			)
+			getString("Enter your nane: ", &name)
+			if err := carts.Checkout(name); err != nil {
+				log.Print(err)
+			} else {
+				log.Print("Succeed")
+			}
+		case 6:
+			opt = -1
+		default:
+			if opt > 6 {
+				fmt.Println("Be serious please... _=")
+			} else {
+				fmt.Println("Placeholder desu~")
+			}
+		}
+	}
+}
+
+func getString(prompt string, a *string) {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print(prompt)
+	if scanner.Scan() {
+		*a = scanner.Text()
+	}
+}
