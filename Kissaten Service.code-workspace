@@ -4,8 +4,16 @@
 			"path": "."
 		},
 		{
-			"path": "..\\KisatenSim"
+			"path": "..\\..\\Py3"
+		},
+		{
+			"path": "..\\..\\SIC\\register-service"
+		},
+		{
+			"path": "..\\KodingKatze\\medic-app-v2-backend"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"discord.enabled": false
+	}
 }
