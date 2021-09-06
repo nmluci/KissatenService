@@ -1,4 +1,4 @@
-package service
+package models
 
 import (
 	"bufio"
@@ -10,12 +10,17 @@ import (
 	"strings"
 )
 
-var invFile = "./storage/inventory.data"
+type Item struct {
+	Id    int
+	Name  string
+	Sum   int
+	Price uint
+}
 
-// Initialize the Inventory by retrieving data from the prefer database (PlainText for now),
-// and load it into the Inventory Struct
-func (inv models.Inventory) Init() {
-	file, err := os.Open(invFile)
+type Inventory map[string]*Item
+
+func (inv Inventory) Init() {
+	file, err := os.Open("")
 	if err != nil {
 		log.Fatalf("File Not Found!")
 	}
@@ -28,12 +33,12 @@ func (inv models.Inventory) Init() {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		inv.AppendItem(toItem(scanner.Text()))
+		inv.AppendItem(ToItem(scanner.Text()))
 	}
 }
 
 // Convert Raw String into its corresponding datatypes
-func toItem(rawData string) (string, *Item) {
+func ToItem(rawData string) (string, *Item) {
 	id := 0
 	str := strings.Split(rawData, "#")
 	name := str[0]
@@ -110,8 +115,4 @@ func (inv Inventory) VerboseItem(itm string) {
 			fmt.Printf("┬─%s\n├ SCH %d,00\n└ Qty: %d\n", name, item.Price, item.Sum)
 		}
 	}
-}
-
-func (itm *Item) Verbose() {
-	fmt.Printf("┬─%s\n├ SCH %d,00\n└ Qty: %d\n", itm.Name, itm.Price, itm.Sum)
 }

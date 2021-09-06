@@ -3,7 +3,6 @@ package main
 import (
 	_ "encoding/json"
 	"fmt"
-	_ "fmt"
 	_ "io/ioutil"
 	"log"
 	"net/http"
