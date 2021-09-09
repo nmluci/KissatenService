@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	INSERT_ITEM_STMT        = "INSERT INTO Inventory(id, name, price, stock) values (?, ?, ?, ?)"
+	INSERT_ITEM_STMT        = "INSERT INTO Inventory(name, price, stock) values (?, ?, ?)"
+	COUNT_ITEM_STMT         = "SELECT COUNT(DISTINCT id) FROM Inventory"
 	UPDATE_ITEM_STOCKS_STMT = "UPDATE Inventory SET stock = ? WHERE id == ?"
 	UPDATE_ITEM_PRICE_STMT  = "UPDATE Inventory SET price = ? WHERE id == ?"
 	UPDATE_ITEM_ALL_STMT    = "UPDATE Inventory SET price = ?, stock = ? WHERE id == ?"
 	GET_ALL_ITEM_STMT       = "SELECT id, name, price, stock FROM Inventory"
 	GET_ITEM_BY_ID_STMT     = "SELECT id, name, price, stock FROM Inventory WHERE id == ?"
-	GET_ITEM_ID_STMT        = "SELECT id FROM Inventory WHERE name == ?"
 )
 
 type InventoryModel struct {
@@ -29,6 +29,20 @@ type Item struct {
 }
 
 type Items []*Item
+
+func (im *InventoryModel) GetItemById(id int) (*Item, error) {
+	rows, err := im.DB.Query(GET_ITEM_BY_ID_STMT, id)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+
+	itm := &Item{}
+	defer rows.Close()
+	rows.Next()
+	rows.Scan(&itm.Id, &itm.Name, &itm.Price, &itm.Stock)
+	return itm, nil
+}
 
 func (im *InventoryModel) GetItemByName(name string) (*Item, error) {
 	rows, err := im.DB.Query(GET_ITEM_BY_ID_STMT, name)
@@ -93,16 +107,19 @@ func (im *InventoryModel) UpdateItemAllProp(itemId int, price int, stocks int) e
 	return nil
 }
 
-func (im *InventoryModel) GetItemID(name string) (int, error) {
-	if rows, err := im.DB.Query(GET_ITEM_ID_STMT, name); err != nil {
+func (im *InventoryModel) InsertItem(name string, price int, stocks int) (int, error) {
+	rows, err := im.DB.Exec(INSERT_ITEM_STMT, name, price, stocks)
+	if err != nil {
+		log.Println(err)
 		return -1, err
-	} else {
-		var itemId int
-		defer rows.Close()
-		rows.Next()
-		rows.Scan(&itemId)
-		return itemId, nil
 	}
+
+	rowNum, err := rows.LastInsertId()
+	if err != nil {
+		log.Println(err)
+		return -1, nil
+	}
+	return int(rowNum), nil
 }
 
 func (item *Item) ToJson(w io.Writer) {

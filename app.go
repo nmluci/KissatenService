@@ -12,6 +12,6 @@ import (
 )
 
 func main() {
-	fmt.Print("Listening at localhost:8081")
+	fmt.Println("Listening at localhost:8081")
 	log.Fatal(http.ListenAndServe(":8081", router.Router()))
 }

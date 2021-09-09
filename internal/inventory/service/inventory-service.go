@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"log"
 
 	models "github.com/nmluci/KissatenService/internal/inventory/model"
 )
@@ -22,12 +23,29 @@ func GetItemByName(im *models.InventoryModel, name string) (*models.Item, error)
 	}
 }
 
+func GetItemById(im *models.InventoryModel, id int) (*models.Item, error) {
+	if data, err := im.GetItemById(id); err != nil {
+		return nil, err
+	} else {
+		return data, err
+	}
+}
+
 func RemoveItem(im *models.InventoryModel, itemId int) error {
 	// Considered a Best Practiced to just removed its stock instead of remove it from the database
 	if err := im.UpdateItemAllProp(itemId, -1, -1); err != nil {
 		return err
 	} else {
 		return nil
+	}
+}
+
+func InsertItem(im *models.InventoryModel, name string, price int, stock int) (*int, error) {
+	if id, err := im.InsertItem(name, price, stock); err != nil {
+		log.Println(err)
+		return nil, err
+	} else {
+		return &id, nil
 	}
 }
 
