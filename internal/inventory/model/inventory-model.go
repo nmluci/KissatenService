@@ -1,118 +1,114 @@
 package models
 
 import (
-	"bufio"
-	"errors"
-	"fmt"
+	"database/sql"
+	"encoding/json"
+	"io"
 	"log"
-	"os"
-	"strconv"
-	"strings"
 )
 
+const (
+	INSERT_ITEM_STMT        = "INSERT INTO Inventory(id, name, price, stock) values (?, ?, ?, ?)"
+	UPDATE_ITEM_STOCKS_STMT = "UPDATE Inventory SET stock = ? WHERE id == ?"
+	UPDATE_ITEM_PRICE_STMT  = "UPDATE Inventory SET price = ? WHERE id == ?"
+	UPDATE_ITEM_ALL_STMT    = "UPDATE Inventory SET price = ?, stock = ? WHERE id == ?"
+	GET_ALL_ITEM_STMT       = "SELECT id, name, price, stock FROM Inventory"
+	GET_ITEM_BY_ID_STMT     = "SELECT id, name, price, stock FROM Inventory WHERE id == ?"
+	GET_ITEM_ID_STMT        = "SELECT id FROM Inventory WHERE name == ?"
+)
+
+type InventoryModel struct {
+	DB *sql.DB
+}
+
 type Item struct {
-	Id    int
-	Name  string
-	Sum   int
-	Price uint
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	Price int    `json:"price"`
+	Stock int    `json:"stock"`
 }
 
-type Inventory map[string]*Item
+type Items []*Item
 
-func (inv Inventory) Init() {
-	file, err := os.Open("")
+func (im *InventoryModel) GetItemByName(name string) (*Item, error) {
+	rows, err := im.DB.Query(GET_ITEM_BY_ID_STMT, name)
 	if err != nil {
-		log.Fatalf("File Not Found!")
+		log.Println(err.Error())
+		return nil, err
 	}
 
-	defer func() {
-		if err = file.Close(); err != nil {
-			log.Fatalf("Error'd")
-		}
-	}()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		inv.AppendItem(ToItem(scanner.Text()))
-	}
+	itm := &Item{}
+	defer rows.Close()
+	rows.Next()
+	rows.Scan(&itm.Id, &itm.Name, &itm.Price, &itm.Stock)
+	return itm, nil
 }
 
-// Convert Raw String into its corresponding datatypes
-func ToItem(rawData string) (string, *Item) {
-	id := 0
-	str := strings.Split(rawData, "#")
-	name := str[0]
-	sum, err := strconv.ParseInt(str[1], 10, 0)
+func (im *InventoryModel) GetAllItem() (Items, error) {
+	var items Items
+	rows, err := im.DB.Query(GET_ALL_ITEM_STMT)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err.Error())
+		return nil, err
 	}
 
-	price, err := strconv.ParseUint(str[2], 10, 0)
-	if err != nil {
-		log.Fatal(err)
+	defer rows.Close()
+	for rows.Next() {
+		var temp Item
+		rows.Scan(&temp.Id, &temp.Name, &temp.Price, &temp.Stock)
+		items = append(items, &temp)
 	}
-	return name, &Item{id, name, int(sum), uint(price)}
+	return items, nil
 }
 
-func (inv Inventory) ItemCount() int {
-	return len(inv)
+func (im *InventoryModel) AppendItem(newItem Item) error {
+	if _, err := im.DB.Exec(INSERT_ITEM_STMT, newItem.Id, newItem.Name, newItem.Price, newItem.Stock); err != nil {
+		log.Println(err.Error())
+		return err
+	}
+	return nil
 }
 
-func (inv Inventory) GetItemByName(name string) *Item {
-	if itm, exist := inv[name]; exist {
-		return itm
+func (im *InventoryModel) UpdateItemPrice(itemId int, price int) error {
+	if _, err := im.DB.Exec(UPDATE_ITEM_PRICE_STMT, price, itemId); err != nil {
+		log.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (im *InventoryModel) UpdateItemStocks(itemId int, stocks int) error {
+	if _, err := im.DB.Exec(UPDATE_ITEM_STOCKS_STMT, stocks, itemId); err != nil {
+		log.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (im *InventoryModel) UpdateItemAllProp(itemId int, price int, stocks int) error {
+	if _, err := im.DB.Exec(UPDATE_ITEM_ALL_STMT, price, stocks, itemId); err != nil {
+		log.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (im *InventoryModel) GetItemID(name string) (int, error) {
+	if rows, err := im.DB.Query(GET_ITEM_ID_STMT, name); err != nil {
+		return -1, err
 	} else {
-		return nil
+		var itemId int
+		defer rows.Close()
+		rows.Next()
+		rows.Scan(&itemId)
+		return itemId, nil
 	}
 }
 
-func (invLst Inventory) AppendItem(name string, itm *Item) error {
-	if _, exist := invLst[name]; exist {
-		return errors.New("data already existed")
-	} else {
-		invLst[name] = itm
-		return nil
-	}
+func (item *Item) ToJson(w io.Writer) {
+	json.NewEncoder(w).Encode(item)
 }
 
-func (invLst Inventory) RemoveItem(name string) error {
-	if _, exist := invLst[name]; exist {
-		delete(invLst, name)
-		return nil
-	} else {
-		return errors.New("data isn't existed")
-	}
-}
-
-func (invLst *Inventory) Export() {
-	file, err := os.Create("./storage/mem.txt")
-	if err != nil {
-		panic(err)
-	}
-
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	for name, itm := range *invLst {
-		file.WriteString(fmt.Sprintf("%s#%d%d\n", name, itm.Price, itm.Sum))
-	}
-}
-
-func (inv Inventory) Verbose() {
-	fmt.Print("Item List\n")
-	for name, item := range inv {
-		fmt.Printf("┬─%s\n├ SCH %d,00\n└ Qty: %d\n", name, item.Price, item.Sum)
-	}
-}
-
-func (inv Inventory) VerboseItem(itm string) {
-	for name, item := range inv {
-		if strings.EqualFold(name, itm) {
-			// fmt.Printf("%s %d %d\n", name, item.price, item.sum)
-			fmt.Printf("┬─%s\n├ SCH %d,00\n└ Qty: %d\n", name, item.Price, item.Sum)
-		}
-	}
+func (item *Item) FromJson(r io.Reader) {
+	json.NewDecoder(r).Decode(item)
 }

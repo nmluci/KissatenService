@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+
+	"github.com/nmluci/KissatenService/internal/kissaten/models"
 )
 
 type SuccessResponse struct {
@@ -22,30 +24,30 @@ func (fr *FailedResponse) ToJson(w io.Writer) {
 	json.NewEncoder(w).Encode(fr)
 }
 
-func BuyItemController() http.HandlerFunc {
+func BuyItemController(km *models.KissatenModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
-func ReturnItemController() http.HandlerFunc {
+func ReturnItemController(km *models.KissatenModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
-func DropCartController() http.HandlerFunc {
+func DropCartController(km *models.KissatenModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
-func PayCartController() http.HandlerFunc {
+func PayCartController(km *models.KissatenModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
-func GetAllCartController() http.HandlerFunc {
+func GetAllCartController(km *models.KissatenModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
-func GetCartController() http.HandlerFunc {
+func GetCartController(km *models.KissatenModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
-func MakeNewCartController() http.HandlerFunc {
+func MakeNewCartController(km *models.KissatenModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
