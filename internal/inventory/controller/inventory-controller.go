@@ -247,7 +247,7 @@ func InsertItemController(im *models.InventoryModel) http.HandlerFunc {
 	}
 }
 
-func GetItemByQueryController(im *models.InventoryModel) http.HandlerFunc {
+func GetItemByNameController(im *models.InventoryModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 
