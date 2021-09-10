@@ -23,6 +23,14 @@ func GetItemByName(im *models.InventoryModel, name string) (*models.Item, error)
 	}
 }
 
+func GetItemByQuery(im *models.InventoryModel, query *models.QueryData) (models.Items, error) {
+	if data, err := im.GetItemByQuery(query); err != nil {
+		return nil, err
+	} else {
+		return data, nil
+	}
+}
+
 func GetItemById(im *models.InventoryModel, id int) (*models.Item, error) {
 	if data, err := im.GetItemById(id); err != nil {
 		return nil, err

@@ -212,7 +212,7 @@ func InsertItemController(im *models.InventoryModel) http.HandlerFunc {
 		reqBody.FromJson(r.Body)
 		if reqBody == nil || reqBody.Name == nil {
 			w.WriteHeader(http.StatusBadRequest)
-			log.Println("no data given")
+			log.Println("invalid request")
 			errResp := &ErrorResponse{
 				Message: "seriously? _-",
 				ErrCode: 0,
@@ -247,27 +247,33 @@ func InsertItemController(im *models.InventoryModel) http.HandlerFunc {
 	}
 }
 
-func GetItemByNameController(im *models.InventoryModel) http.HandlerFunc {
+func GetItemByQueryController(im *models.InventoryModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 
-		if itemName, exists := mux.Vars(r)["itemName"]; exists {
-			itm, err := service.GetItemByName(im, itemName)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				log.Println(err)
-				errResp := &ErrorResponse{Message: err.Error()}
-				errResp.ToJson(w)
-			}
-			resp := &SuccessResponse{Data: itm}
-			resp.ToJson(w)
-		} else {
+		qData := &models.QueryData{
+			Name:       fmt.Sprintf("%s%s", r.URL.Query().Get("name"), "%"),
+			PriceStart: r.URL.Query().Get("priceStart"),
+			PriceEnd:   r.URL.Query().Get("priceEnd"),
+			StockStart: r.URL.Query().Get("stockStart"),
+			StockEnd:   r.URL.Query().Get("stockEnd"),
+		}
+
+		if items, err := service.GetItemByQuery(im, qData); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			err := &ErrorResponse{
-				Message: "item not found in the database",
-				ErrCode: 404,
+			log.Println(err)
+			errResp := &ErrorResponse{
+				Message: err.Error(),
 			}
-			err.ToJson(w)
+			errResp.ToJson(w)
+			return
+		} else {
+			w.WriteHeader(http.StatusOK)
+			resp := &SuccessResponse{
+				Data:    items,
+				Message: "Hereby thy data",
+			}
+			resp.ToJson(w)
 		}
 	}
 }

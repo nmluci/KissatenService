@@ -15,10 +15,19 @@ const (
 	UPDATE_ITEM_ALL_STMT    = "UPDATE Inventory SET price = ?, stock = ? WHERE id == ?"
 	GET_ALL_ITEM_STMT       = "SELECT id, name, price, stock FROM Inventory"
 	GET_ITEM_BY_ID_STMT     = "SELECT id, name, price, stock FROM Inventory WHERE id == ?"
+	GET_ITEM_BY_QUERY       = "SELECT id, name, price, stock FROM Inventory WHERE name LIKE ?"
 )
 
 type InventoryModel struct {
 	DB *sql.DB
+}
+
+type QueryData struct {
+	Name       string `json:"name"`
+	PriceStart string `json:"priceStart,omitempty"`
+	PriceEnd   string `json:"priceEnd,omitempty"`
+	StockStart string `json:"stockStart,omitempty"`
+	StockEnd   string `json:"stockEnd,omitempty"`
 }
 
 type Item struct {
@@ -120,6 +129,37 @@ func (im *InventoryModel) InsertItem(name string, price int, stocks int) (int, e
 		return -1, nil
 	}
 	return int(rowNum), nil
+}
+
+func (im *InventoryModel) GetItemByQuery(query *QueryData) (Items, error) {
+	var items Items
+	var itemVal []interface{}
+	var baseQuery = GET_ITEM_BY_QUERY
+	itemVal = append(itemVal, query.Name)
+
+	if query.PriceStart != "" && query.PriceEnd != "" {
+		baseQuery += "AND price BETWEEN ? AND ? "
+		itemVal = append(itemVal, query.PriceStart, query.PriceEnd)
+	}
+
+	if query.StockStart != "" && query.StockEnd != "" {
+		baseQuery += "AND stock BETWEEN ? AND ? "
+		itemVal = append(itemVal, query.StockStart, query.StockEnd)
+	}
+
+	rows, err := im.DB.Query(baseQuery, itemVal...)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var temp Item
+		rows.Scan(&temp.Id, &temp.Name, &temp.Price, &temp.Stock)
+		items = append(items, &temp)
+	}
+
+	return items, nil
 }
 
 func (item *Item) ToJson(w io.Writer) {
