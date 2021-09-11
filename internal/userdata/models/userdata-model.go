@@ -45,9 +45,9 @@ func (um *UserModel) GetAllUser() (Users, error) {
 
 	defer rows.Close()
 	for rows.Next() {
-		var temp *UserData
+		var temp UserData
 		rows.Scan(&temp.Id, &temp.Username, &temp.Credit)
-		users = append(users, temp)
+		users = append(users, &temp)
 	}
 	return users, nil
 }
