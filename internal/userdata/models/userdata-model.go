@@ -2,6 +2,9 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+
+	"github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -54,6 +57,11 @@ func (um *UserModel) GetAllUser() (Users, error) {
 
 func (um *UserModel) RegisterNewUser(uname string) error {
 	if _, err := um.DB.Exec(INSERT_NEW_USER_STMT, uname); err != nil {
+		if driverErr, ok := err.(sqlite3.Error); ok {
+			if driverErr.ExtendedCode == 2067 {
+				return errors.New("existing username detected")
+			}
+		}
 		return err
 	} else {
 		return nil
