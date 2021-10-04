@@ -37,7 +37,7 @@ func MakeNewCart(uname string) (int, error) {
 		err     error
 	)
 
-	resp, err := http.Get(fmt.Sprintf("http://localhost:8081/api/user/u/%s", uname))
+	resp, err := http.Get(fmt.Sprintf("http://localhost:8081/api/database/u/%s", uname))
 	if err != nil {
 		return -1, err
 	}
