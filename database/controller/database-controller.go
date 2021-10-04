@@ -162,7 +162,7 @@ func RegisterService(db *models.DatabaseModel) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			resp := &DatabaseResponse{
 				Module: "REGISTER_SERVICE",
-				Status: "FAIELD",
+				Status: "FAILED",
 				Data: &FailedResponse{
 					ErrorMessage: err.Error(),
 					ErrorCode:    "DB-500",

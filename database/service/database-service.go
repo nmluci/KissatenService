@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"log"
 
 	"github.com/nmluci/KissatenService/database/models"
 )
@@ -52,10 +53,13 @@ func PostItem(db *models.DatabaseModel, query string, param []string, serviceNam
 }
 
 func RegisterService(serviceName string, services *[]string) error {
+	log.Printf("Service Logged In: %s\n", serviceName)
 	if !IsServiceExists(serviceName, services) {
+		log.Print(services)
 		*services = append(*services, serviceName)
 		return nil
 	} else {
+		log.Print(services)
 		return errors.New("services already registered")
 	}
 }

@@ -27,5 +27,5 @@ func main() {
 	db.DB = InitializeDatabase()
 	router.Router(r, db)
 
-	log.Fatal(http.ListenAndServe("localhost:8081", r))
+	log.Fatal(http.ListenAndServe("localhost:8085", r))
 }
