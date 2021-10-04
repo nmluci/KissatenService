@@ -41,7 +41,7 @@ func (req *DatabaseRequest) FromJson(r io.Reader) {
 	json.NewDecoder(r).Decode(req)
 }
 
-func GetItem(db models.DatabaseModel) http.HandlerFunc {
+func GetItem(db *models.DatabaseModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 
@@ -49,13 +49,14 @@ func GetItem(db models.DatabaseModel) http.HandlerFunc {
 		queryReq.FromJson(r.Body)
 		serviceName := mux.Vars(r)["service"]
 
-		if serviceName == "" {
+		if serviceName == "" || !service.IsServiceExists(serviceName, &db.Services) {
 			w.WriteHeader(http.StatusBadRequest)
 			resp := &DatabaseResponse{
 				Module: queryReq.Module,
+				Status: "Rejected",
 				Data: &FailedResponse{
 					ErrorMessage: "Service not registered or invalid!",
-					ErrorCode:    "DB=403",
+					ErrorCode:    "DB-403",
 				},
 			}
 			resp.ToJson(w)
@@ -67,6 +68,7 @@ func GetItem(db models.DatabaseModel) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			resp := &DatabaseResponse{
 				Module: queryReq.Module,
+				Status: "ERROR",
 				Data: &FailedResponse{
 					ErrorMessage: err.Error(),
 					ErrorCode:    "DB-10",
@@ -87,7 +89,7 @@ func GetItem(db models.DatabaseModel) http.HandlerFunc {
 	}
 }
 
-func PostItem(db models.DatabaseModel) http.HandlerFunc {
+func PostItem(db *models.DatabaseModel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 
@@ -95,13 +97,14 @@ func PostItem(db models.DatabaseModel) http.HandlerFunc {
 		queryReq.FromJson(r.Body)
 		serviceName := mux.Vars(r)["service"]
 
-		if serviceName == "" {
+		if serviceName == "" || !service.IsServiceExists(serviceName, &db.Services) {
 			w.WriteHeader(http.StatusBadRequest)
 			resp := &DatabaseResponse{
 				Module: queryReq.Module,
+				Status: "Rejected",
 				Data: &FailedResponse{
 					ErrorMessage: "Service not registered or invalid!",
-					ErrorCode:    "DB=403",
+					ErrorCode:    "DB-403",
 				},
 			}
 			resp.ToJson(w)

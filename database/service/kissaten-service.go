@@ -4,7 +4,7 @@ import (
 	"github.com/nmluci/KissatenService/database/models"
 )
 
-func KissatenGetItem(db models.DatabaseModel, query string, param []interface{}) (*models.KissatenDB, error) {
+func KissatenGetItem(db *models.DatabaseModel, query string, param []interface{}) (*models.KissatenDB, error) {
 	data := &models.KissatenDB{}
 	rows, err := db.DB.Query(query, param...)
 	if err != nil {
@@ -21,7 +21,7 @@ func KissatenGetItem(db models.DatabaseModel, query string, param []interface{})
 	return data, nil
 }
 
-func KissatenPostItem(db models.DatabaseModel, query string, param []interface{}) error {
+func KissatenPostItem(db *models.DatabaseModel, query string, param []interface{}) error {
 	if _, err := db.DB.Exec(query, param...); err != nil {
 		return err
 	}
